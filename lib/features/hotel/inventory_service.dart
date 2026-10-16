@@ -5,11 +5,11 @@ import 'purchase_order.dart';
 
 class InventoryService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String hotelId; // <-- හෝටල් ID එක මෙතැනට ගන්නවා
+  final String hotelId; 
 
   InventoryService({required this.hotelId});
 
-  // Haversine Formula: GPS coordinates දෙකක් අතර දුර (KM වලින්) ගණනය කරයි
+  // Haversine Formula: GPS coordinates
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     const double p = 0.017453292519943295; // Math.PI / 180
     final double a = 0.5 -
@@ -18,7 +18,7 @@ class InventoryService {
     return 12742 * asin(sqrt(a));
   }
 
-  // Super Admin දාපු Master Catalog එක Live Stream එකක් විදිහට ලබාගැනීම
+  // Super Admin 
   Stream<List<MasterItem>> getMasterItemsStream() {
     return _firestore.collection('master_catalog').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -33,7 +33,7 @@ class InventoryService {
     });
   }
 
-  // අදාළ Hotel එකට පමණක් අයිති Inventory එක Fetch කිරීම (Strict Multi-Tenancy)
+  // (Strict Multi-Tenancy)
   Stream<List<InventoryItem>> getHotelInventory() {
     return _firestore
         .collection('hotels')
@@ -45,12 +45,12 @@ class InventoryService {
             .toList());
   }
 
-  // 🔑 Alias for Dashboard Compatibility (Error එක මඟහරවා ගැනීමට)
+  // 🔑 Alias for Dashboard Compatibility (Error )
   Stream<List<InventoryItem>> getInventoryItemsStream() {
     return getHotelInventory();
   }
 
-  // අදාළ Hotel එකට පමණක් අයිති Purchase Orders Fetch කිරීම
+
   Stream<List<PurchaseOrder>> getHotelPurchaseOrders() {
     return _firestore
         .collection('hotels')
@@ -62,7 +62,7 @@ class InventoryService {
             .toList());
   }
 
-  // 🔑 Alias for Dashboard Compatibility (Error එක මඟහරවා ගැනීමට)
+  // 🔑 Alias for Dashboard Compatibility (Error)
   Stream<List<PurchaseOrder>> getHotelOrdersStream() {
     return getHotelPurchaseOrders();
   }
@@ -90,7 +90,7 @@ class InventoryService {
     }, SetOptions(merge: true));
   }
 
-  /// 🧠 SMART ROUTING DISPATCHER: හෝටලයේ ලොකේෂන් එක සහ Stock එක බලලා ළඟම ඉන්න Vendor ට Order එක යවයි
+  /// 🧠 SMART ROUTING DISPATCHER: 
   Future<bool> createPurchaseOrder({
     required String itemName,
     required String category,
@@ -101,7 +101,7 @@ class InventoryService {
       print("--- 🚀 STARTING SMART ORDER DISPATCH ---");
       print("Target Item: $itemName, Category: $category, Qty: $quantity $unit");
 
-      // 1. හෝටලයේ GPS ලොකේෂන් එක ලබාගැනීම
+      // 1. Hotel GPS
       final hotelDoc = await _firestore.collection('hotels').doc(hotelId).get();
       if (!hotelDoc.exists) {
         print("❌ Error: Hotel profile not found for ID: $hotelId");
@@ -113,7 +113,7 @@ class InventoryService {
       final double hotelLng = (hotelData['longitude'] ?? 0.0).toDouble();
       print("📍 Hotel Location -> Lat: $hotelLat, Lng: $hotelLng");
 
-      // 2. සිස්ටම් එකේ ඉන්න සියලුම Vendors ලා ලබාගැනීම
+      // 2. system Vendors 
       final vendorsSnapshot = await _firestore.collection('vendors').get();
       print("🏢 Total vendors found in system: ${vendorsSnapshot.docs.length}");
 
@@ -121,7 +121,7 @@ class InventoryService {
       String bestVendorName = "Authorized Vendor";
       double shortestDistance = double.infinity;
 
-      // 3. එක එක Vendor ගේ Warehouse Location සහ Catalog Stock පරීක්ෂා කිරීම
+      
       for (var vendorDoc in vendorsSnapshot.docs) {
         final vendorData = vendorDoc.data();
         final vendorId = vendorDoc.id;
@@ -132,7 +132,7 @@ class InventoryService {
 
         print("🔍 Checking Vendor: $vendorName ($vendorId) at Lat: $vendorLat, Lng: $vendorLng");
 
-        // Vendor ගේ catalog එක fetch කිරීම
+        
         final catalogSnapshot = await _firestore
             .collection('vendors')
             .doc(vendorId)
@@ -144,15 +144,15 @@ class InventoryService {
           final itemData = catalogDoc.data();
           final catalogItemName = (itemData['name'] ?? '').toString().trim();
           
-          // Case-insensitive comparison (අකුරු වල පොඩි වෙනස්කම් මඟහරවා ගැනීමට)
+          
           if (catalogItemName.toLowerCase() == itemName.trim().toLowerCase()) {
             foundItem = true;
             final double availableStock = (itemData['stock_qty'] ?? 0).toDouble();
             print("   ↳ Found item '$catalogItemName' with stock: $availableStock");
 
-            // Condition 1: අවශ්‍ය ප්‍රමාණයට Stock එක තිබේද?
+          
             if (availableStock >= quantity) {
-              // Condition 2: දුර මැනීම (KM)
+             
               double distance = calculateDistance(
                 hotelLat,
                 hotelLng,
@@ -161,7 +161,7 @@ class InventoryService {
               );
               print("   ↳ Distance to hotel: ${distance.toStringAsFixed(2)} KM");
 
-              // Condition 3: ළඟම ඉන්න Vendor ව තෝරාගැනීම
+          
               if (distance < shortestDistance) {
                 shortestDistance = distance;
                 bestVendorId = vendorId;
@@ -179,13 +179,13 @@ class InventoryService {
         }
       }
 
-      // 4. සුදුසුම Vendor කෙනෙක් හමු වුවහොත් පමණක් Order එක Assign කර Save කිරීම
+
       if (bestVendorId != null) {
-        // 👇 එකම Document ID එකක් මුලින්ම Generate කර ගැනීම
+      
         final String orderId = _firestore.collection('orders').doc().id;
 
         final orderData = {
-          'order_id': orderId, // 🔑 ID එක Field එකක් ලෙසද ඇතුළත් කිරීම
+          'order_id': orderId, 
           'hotel_id': hotelId,
           'vendor_id': bestVendorId,
           'vendor_name': bestVendorName,
@@ -198,12 +198,10 @@ class InventoryService {
           'distance_km': double.parse(shortestDistance.toStringAsFixed(2)),
         };
 
-        // 👇 add() වෙනුවට doc(orderId).set(orderData) භාවිතා කිරීම (මෙයින් ID දෙකම එකම වේ)
         
-        // 1. Global orders collection එකට එම ID එකෙන්ම සේව් කිරීම
         await _firestore.collection('orders').doc(orderId).set(orderData);
 
-        // 2. Hotel sub-collection එකටත් එම ID එකෙන්ම සේව් කිරීම
+       
         await _firestore
             .collection('hotels')
             .doc(hotelId)

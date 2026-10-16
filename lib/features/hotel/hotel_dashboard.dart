@@ -60,7 +60,7 @@ void initState() {
   _inventoryService = InventoryService(hotelId: widget.hotelId);
   _loadHotelProfileData();
   
-  // 💡 ඇප් එක ස්ටාර්ට් වෙද්දී එකම එක වතාවක් AI Call එක යවයි (429 Too Many Requests වළක්වයි)
+  // when app refresh API call
   _fetchAiForecastOnce();
   _fetchAiDistrictTrendOnce();
 }
@@ -80,7 +80,7 @@ Future<void> _fetchAiForecastOnce() async {
       _isLoadingAi = false;
       _currentAlert = result;
       _showAlert = true;
-      _isAiForecastFetched = true; // 💡 මෙතැනත්
+      _isAiForecastFetched = true; 
     });
   }
 }
@@ -128,7 +128,7 @@ Future<void> _fetchAiDistrictTrendOnce() async {
       apiKey: apiKey,
     );
 
-    // ප්‍රදේශයේ පරිභෝජන ප්‍රවණතා සඳහා වන ප්‍රොම්ප්ට් එක
+    
     final prompt = '''
       You are an advanced AI regional market and district consumption analyst for the hospitality sector.
       Based on these current inventory items in the hotel:
@@ -158,7 +158,7 @@ Future<void> _fetchAiDistrictTrendOnce() async {
   if (mounted) {
     setState(() {
       _isLoadingDistrictAi = false;
-      _showAlert = false; // 💡 AI එකෙන් ඩේටා ආවේ නැත්නම් බැනර් එක අයින් කරයි!
+      _showAlert = false; 
     });
   }
 }
@@ -168,11 +168,7 @@ Future<void> _fetchAiDistrictTrendOnce() async {
 
 
 
-// 🤖 Dynamic Google Cloud Vertex AI Demand Predictor Function
-  // 🤖 Dynamic Google Cloud Vertex AI Demand Predictor Function
- // 🤖 True Dynamic Google Cloud Vertex AI Demand Predictor Function
-// 🤖 True Dynamic Google Cloud Vertex AI Demand Predictor Function
-// 🤖 Real Google Cloud Vertex AI / Gemini Demand Predictor Function
+
 // 🤖 Real Google Cloud Vertex AI / Gemini Demand Predictor Function
 Future<String> _getRealGeminiAiDemandForecast() async {
   print('🚨 Single API Call triggered at: ${DateTime.now()}');
@@ -218,7 +214,7 @@ Future<String> _getRealGeminiAiDemandForecast() async {
 
   } catch (e) {
     print('Gemini API Error: $e');
-    // Quota Limit (429) එකක් පැන්නත් ඩිමෝ එකට බය වෙන්න දෙයක් නැහැ, මේකෙන් ලස්සනට සේෆ් වෙනවා:
+    
     return 'AI Forecast: High weekend spike predicted. Reorder stock threshold recommended at +15% for critical items.';
   }
 }
@@ -952,15 +948,15 @@ Future<String> _getRealGeminiAiDemandForecast() async {
        Expanded(
   child: Column(
     children: [
-      // ⚠️ DYNAMISK IN-APP ALERT BANNER (_showAlert true නම් පමණක් උඩින් පෙන්වයි)
+ 
       if (_showAlert && _aiDistrictTrendText.isNotEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: InventoryAlertBanner(
-            message: _aiDistrictTrendText, // 💡 මෙන්න මෙතැන _currentAlert වෙනුවට මේක දාන්න!
+            message: _aiDistrictTrendText, 
             onClose: () {
               setState(() {
-                _showAlert = false; // X එක ක්ලික් කළ විට බැනර් එක වැසේ
+                _showAlert = false; 
               });
             },
           ),
@@ -1048,7 +1044,7 @@ Future<String> _getRealGeminiAiDemandForecast() async {
               ),
             onPressed: () {
   setState(() {
-    _isAiForecastFetched = false; // 💡 මෙතැනත් _isAiForecastFetched දාන්න
+    _isAiForecastFetched = false; 
   });
   _fetchAiForecastOnce();
   ScaffoldMessenger.of(context).showSnackBar(
@@ -1193,7 +1189,7 @@ Future<String> _getRealGeminiAiDemandForecast() async {
                       itemBuilder: (context, index) {
                         final item = lowStockItems[index];
 
-// Check if active order exists for this item (DELIVERED වූ order එකක් තිබේ නම් එය අලුත් order එකකට බාධා නොකිරීම)
+// Check if active order exists for this item (DELIVERED 
 final hasActiveOrder = activeOrders.any((o) =>
   o.itemName.toLowerCase() == item.name.toLowerCase() &&
   o.status != 'DELIVERED' &&
@@ -1211,8 +1207,8 @@ final hasActiveOrder = activeOrders.any((o) =>
     color: const Color(0xFF1E293B), 
     borderRadius: BorderRadius.circular(12),
   ),
-  child: Material( // 💡 මෙන්න මෙතැනට Material widget එක එකතු කළා
-    color: Colors.transparent, // Container එකේ কালার එක පාවිච්චි වෙන්න transparent දෙනවා
+  child: Material(
+    color: Colors.transparent, 
     borderRadius: BorderRadius.circular(12),
     child: ListTile(
       leading: const Icon(Icons.warning, color: Colors.orange),
@@ -1435,7 +1431,7 @@ final hasActiveOrder = activeOrders.any((o) =>
                               ],
                             ),
                           ),
-                          // ✏️ Edit සහ 🗑️ Delete අයිකන් බටන්ස්
+                          // 
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1552,7 +1548,7 @@ final hasActiveOrder = activeOrders.any((o) =>
                   return const Center(child: CircularProgressIndicator(color: Color(0xFF0EA5E9)));
                 }
 
-                // 🔍 Delivered නොවන active orders පමණක් filter කර ගැනීම
+               
 final orders = (snapshot.data ?? [])
     .where((order) => order.status.toUpperCase() != 'DELIVERED')
     .toList();
@@ -1634,9 +1630,7 @@ StreamBuilder<List<MasterItem>>(
   builder: (context, itemSnapshot) {
     final masterItems = itemSnapshot.hasData ? itemSnapshot.data! : [];
 
-    // 1. Unique Main Categories ටික ලබාගැනීම
-    // 1. Unique Main Categories ටික ලබාගැනීම
-    // 1. Unique Main Categories ටික ලබාගැනීම
+
     Set<String> uniqueCategories = {'All'};
     for (var item in masterItems) {
       if (item.category.isNotEmpty) {
@@ -1649,7 +1643,7 @@ StreamBuilder<List<MasterItem>>(
       selectedCategory = 'All';
     }
 
-    // 2. තෝරාගත් Category එකට අදාළ Sub Items (Item Names) පමණක් ෆිල්ටර් කරගැනීම
+
     Set<String> uniqueItems = {'All'};
     for (var item in masterItems) {
       if (selectedCategory == 'All' || item.category == selectedCategory) {
@@ -1660,7 +1654,7 @@ StreamBuilder<List<MasterItem>>(
     }
     final itemsList = uniqueItems.toList();
 
-    // 🔥 3. Safety Check එක (මෙතැනදී උඩ declare කරපු global selectedItem එක පාවිච්චි වෙන්නේ)
+ 
     if (!itemsList.contains(selectedItem)) {
       selectedItem = 'All';
     }
@@ -1692,7 +1686,7 @@ StreamBuilder<List<MasterItem>>(
                   if (val != null) {
                     setState(() {
                       selectedCategory = val;
-                      selectedItem = 'All'; // Category එක මාරු කරද්දී item එක reset වේ
+                      selectedItem = 'All'; 
                     });
                   }
                 },
@@ -1703,9 +1697,7 @@ StreamBuilder<List<MasterItem>>(
         const SizedBox(width: 12),
 
         // 🔥 2. Sub Item Dropdown (Dependent on Main Category)
-        // 🔥 2. Sub Item Dropdown
-        // 🔥 2. Sub Item Dropdown
-        // 2. Sub Item Dropdown එක (මෙන්න මේ කෝඩ් එක විතරක් දාන්න)
+
 Expanded(
   child: Container(
     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1731,7 +1723,7 @@ Expanded(
         onChanged: (val) {
           if (val != null) {
             setState(() {
-              selectedItem = val; // අයිතමය ක්ලික් කළ ගමන් නිවැරදිව සේව් වේ
+              selectedItem = val; 
             });
           }
         },
@@ -1799,24 +1791,23 @@ Expanded(
 
                 final allOrders = snapshot.data ?? [];
 
-                // 1. DELIVERED ඒවා විතරක් Filter කිරීම
+
                 var filteredOrders = allOrders.where((order) => order.status.toUpperCase() == 'DELIVERED').toList();
 
-                // 2. Category එක අනුව Filter කිරීම
+    
                 if (selectedCategory != 'All') {
                   filteredOrders = filteredOrders
                       .where((order) => (order.category ?? '').toLowerCase() == selectedCategory.toLowerCase())
                       .toList();
                 }
 
-                // 🔥 3. Sub Item / Item Name එක අනුව Filter කිරීම (දෙවැනි ඩ්‍රොප්ඩවුන් එක සඳහා)
+
                 if (selectedItem != 'All') {
                   filteredOrders = filteredOrders
                       .where((order) => (order.itemName ?? '').toLowerCase() == selectedItem.toLowerCase())
                       .toList();
                 }
 
-                // 4. Date එක අනුව Filter කිරීම (createdDate භාවිතයෙන්)
                 if (selectedDate != null) {
                   filteredOrders = filteredOrders.where((order) {
                     if (order.createdDate == null) return false;

@@ -545,7 +545,7 @@ String _invoiceSearchQuery = '';
   onPressed: () async {
     if (selectedDriverId != null && selectedDriverName != null) {
       
-      // 👈 මෙතැනදී dispatchOrder කියන නිවැරදි නම පාවිච්චි කිරීම
+
       final String generatedPin = await _vendorService.dispatchOrder(
         orderId: order.id,
         driverId: selectedDriverId!,
@@ -553,9 +553,9 @@ String _invoiceSearchQuery = '';
       );
 
       if (context.mounted) {
-        Navigator.pop(context); // මොඩල් එක වැසීම
+        Navigator.pop(context);
 
-        // PIN එක පෙන්වන Pop-up ඩයලග් එක
+        // PIN popup
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -1011,7 +1011,6 @@ String _invoiceSearchQuery = '';
 
                 final rawOrders = snapshot.data ?? [];
 
-                // 🔥 DELIVERED වුණු ඕඩර්ස් පමණක් ලිස්ට් එකෙන් ඉවත් කිරීම (ප්‍රශ්න මඟහරවා ගැනීමට)
                 final activeOrders = rawOrders
                     .where((order) => order.status != 'DELIVERED')
                     .toList();

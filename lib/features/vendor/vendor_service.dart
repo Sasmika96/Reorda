@@ -99,14 +99,13 @@ class VendorService {
     });
   }
 
-  // 1. අලුත් Driver කෙනෙක් Register කිරීම (formattedVendorId පාවිච්චි කරමින්)
   Future<void> addDriver({
     required String name,
     required String phone,
     required String vehicleNumber,
   }) async {
     await _firestore.collection('drivers').add({
-      'vendor_id': formattedVendorId, // 👈 formattedVendorId දැම්මා
+      'vendor_id': formattedVendorId, 
       'name': name,
       'phone': phone,
       'vehicle_number': vehicleNumber,
@@ -117,11 +116,11 @@ class VendorService {
     });
   }
 
-  // 2. අදාළ Vendor ට අයිති Drivers ලාගේ Live Stream එක ලබාගැනීම (formattedVendorId සමඟ)
+
   Stream<List<Map<String, dynamic>>> getDriversStream() {
     return _firestore
         .collection('drivers')
-        .where('vendor_id', isEqualTo: formattedVendorId) // 👈 formattedVendorId සමඟ ෆිල්ටර් කරයි
+        .where('vendor_id', isEqualTo: formattedVendorId)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) {
               final data = doc.data();
@@ -130,11 +129,9 @@ class VendorService {
             }).toList());
   }
 
-  // 3. Order එක Dispatch කරද්දී Driver ව Assign කිරීම
-  // 3. Order එක Dispatch කරද්දී Driver ව Assign කිරීම සහ PIN එක සෑදීම
-// අහඹු අංක (Random numbers) සෑදීමට
+//Random pin genarate
 
-// Order එක Dispatch කරද්දී PIN එක ජනනය කර සේව් කර Return කිරීම
+
   Future<String> dispatchOrder({
     required String orderId,
     required String driverId,
@@ -142,7 +139,7 @@ class VendorService {
   }) async {
     final now = DateTime.now().toIso8601String();
     
-    // 4 අංකයක අහඹු PIN එකක් සෑදීම
+
     final String deliveryPin = (1000 + Random().nextInt(9000)).toString();
 
     await _firestore.collection('orders').doc(orderId).update({

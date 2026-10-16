@@ -118,17 +118,17 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                             ? 'REORDA_PO_VERIFY:${order['id']}:${order['hotel_id']}:${order['item_name'] ?? order['itemName']}:${order['quantity']}' 
                             : qrCode;
 
-                        // 1. Delivery complete කිරීමේ සර්විස් එක ඇමතීම
+                        // 1. Delivery complete service call
                         final success = await _driverService.completeDeliveryByQR(
                           orderId: order['id'],
                           scannedQrData: finalQr,
                         );
 
-                        // 2. මොඩල් එක සහ UI එක සුරක්ෂිතව හැසිරවීම
+                        
                         if (modalContext.mounted) {
-                          Navigator.pop(modalContext); // මොඩල් එක වසන්න
+                          Navigator.pop(modalContext); 
 
-                          // 🔥 UI එක වහාම රිෆ්‍රෙෂ් කිරීමට setState යෙදීම
+                          
                           if (mounted) {
                             setState(() {});
                           }

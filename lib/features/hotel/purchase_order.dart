@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // 🔥 මේක අනිවාර්යයෙන්ම දාන්න ඕනේ!
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 
 class PurchaseOrder {
   final String id;

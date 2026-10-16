@@ -49,7 +49,7 @@ class DriverService {
       double quantity = 0.0;
       Map<String, dynamic> orderData = {};
 
-      // 1. මුලින්ම Top-level 'orders' collection එකෙන් චෙක් කිරීම
+      // 1.Top-level 'orders' collection check
       final topLevelDoc = await _firestore.collection('orders').doc(orderId).get();
       if (topLevelDoc.exists) {
         orderData = topLevelDoc.data()!;
@@ -58,7 +58,7 @@ class DriverService {
         quantity = (orderData['quantity'] ?? 0).toDouble();
       }
 
-      // 2. Top-level නැත්නම් Collection Group හරහා සෙවීම
+      // 2. Top-level empty find Collection Group 
       if (hotelId == null || hotelId.isEmpty) {
         final ordersQuery = await _firestore
             .collectionGroup('orders')
@@ -86,7 +86,7 @@ class DriverService {
         'delivered_at': now.toIso8601String(),
       };
 
-      // Orders update කිරීම
+      // Orders update 
       await _firestore.collection('orders').doc(orderId).set(updateData, SetOptions(merge: true));
 
       await _firestore
@@ -96,7 +96,7 @@ class DriverService {
           .doc(orderId)
           .set(updateData, SetOptions(merge: true));
 
-      // Inventory Stock වැඩි කිරීම
+      // Inventory Stock increes
       final inventorySnapshot = await _firestore
           .collection('hotels')
           .doc(hotelId)
@@ -124,7 +124,7 @@ class DriverService {
         }
       }
 
-      // 5. Vendor Invoice එක ස්වයංක්‍රීයව ජනනය කිරීම
+      // 5. Vendor Invoice automate
       try {
         final invoiceRef = _firestore.collection('vendor_invoices');
         

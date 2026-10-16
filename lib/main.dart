@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // 💡 .env සඳහා එකතු කරන ලදී
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 import 'features/auth/login_screen.dart';
 import 'features/hotel/hotel_dashboard.dart';
 import 'features/vendor/vendor_dashboard.dart';
 import 'features/super_admin/super_admin_dashboard.dart';
-import 'features/driver/driver_dashboard.dart'; // 👈 1. Driver Dashboard එක Import කරගන්න
+import 'features/driver/driver_dashboard.dart'; 
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 💡 .env ෆයිල් එක ලෝඩ් කිරීම
+
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {

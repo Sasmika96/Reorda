@@ -5,7 +5,7 @@ import 'inventory_item.dart';
 class GeminiService {
   Future<String> generateDemandForecast(InventoryItem item) async {
     try {
-      // 1. .env එකෙන් API Key එක ගන්නවා
+      // 1. .env API call
       final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
       if (apiKey.isEmpty || apiKey == "YOUR_GEMINI_API_KEY_HERE") {
@@ -44,7 +44,7 @@ Provide a short 3-bullet response:
       }
     } catch (e) {
       print('GeminiService API Error: $e');
-      // API Error එකක් ආවොත් Smart Fallback Recommendation එක පෙන්වයි
+      // If API Error  Smart Fallback Recommendation
       return _getFallbackRecommendation(item);
     }
   }

@@ -14,34 +14,43 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: 'hotel@reorda.net');
-  final _passwordController = TextEditingController(text: '123456');
-  final _pinController = TextEditingController(); // 👈 Driver 4-digit PIN එක සඳහා Controller එකක්
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _pinController = TextEditingController();
+  
   String _selectedRole = 'hotel'; // hotel, vendor, driver, super_admin
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _pinController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
     try {
       final auth = FirebaseAuth.instance;
 
-      // 🚚 1. DRIVER ROLE LOGIN LOGIC (Phone Number & 4-digit PIN Verification)
+      // 🚚 1. DRIVER ROLE LOGIN LOGIC
       if (_selectedRole == 'driver') {
         final inputPhone = _emailController.text.trim();
         final inputPin = _pinController.text.trim();
 
-        if (inputPin.isEmpty || inputPin.length != 4) {
+        if (inputPhone.isEmpty || inputPin.isEmpty || inputPin.length != 4) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('⚠️ Please enter the 4-digit Delivery PIN provided during dispatch!'),
+              content: Text('⚠️ Please enter a valid phone number and 4-digit PIN!'),
               backgroundColor: Colors.orangeAccent,
+              behavior: SnackBarBehavior.floating,
             ),
           );
           setState(() => _isLoading = false);
           return;
         }
 
-        // Phone number එකෙන් Driver ව සෙවීම
         final driverQuery = await FirebaseFirestore.instance
             .collection('drivers')
             .where('phone', isEqualTo: inputPhone)
@@ -53,7 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
           final driverId = doc.id;
           driverData['id'] = driverId;
 
-          // 🔥 2. Driver ට Assign වෙලා තියෙන (DISPATCHED ස්ටේටස් එකේ) ඕඩර් එකක් අතරින් මේ PIN එක තියෙනවද බැලීම
           final orderQuery = await FirebaseFirestore.instance
               .collection('orders')
               .where('driver_id', isEqualTo: driverId)
@@ -65,8 +73,9 @@ class _LoginScreenState extends State<LoginScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('✅ Successfully logged in as DRIVER with valid PIN!'),
+                  content: Text('✅ Successfully logged in as DRIVER!'),
                   backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
               Navigator.pushReplacement(
@@ -81,8 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('❌ Invalid 4-digit PIN or no active dispatch found for this PIN!'),
+                  content: Text('❌ Invalid 4-digit PIN or no active dispatch found!'),
                   backgroundColor: Colors.redAccent,
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
             }
@@ -93,8 +103,9 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('❌ Driver not found with this Phone Number! Add driver in Vendor Portal first.'),
+                content: Text('❌ Driver not found with this Phone Number!'),
                 backgroundColor: Colors.orangeAccent,
+                behavior: SnackBarBehavior.floating,
               ),
             );
           }
@@ -160,6 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text('Successfully logged in as ${_selectedRole.toUpperCase()}!'),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
           ),
         );
 
@@ -172,11 +184,10 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       }
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login Error: ${e.toString()}'), backgroundColor: Colors.redAccent),
+          SnackBar(content: Text('Login Error: ${e.toString()}'), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating),
         );
       }
     } finally {
@@ -189,114 +200,168 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       body: Center(
-        child: Container(
-          width: 420,
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF0EA5E9).withOpacity(0.3)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.hub_rounded, color: Color(0xFF0EA5E9), size: 32),
-                  SizedBox(width: 12),
-                  Text('REORDA', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text('Smart Supply Chain Portal Access', style: TextStyle(color: Colors.grey, fontSize: 13)),
-              const Divider(color: Colors.grey, height: 32),
-
-              // Role Selector Tabs
-              const Text('Select Access Role:', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildRoleChip('hotel', 'Hotel Store', Icons.hotel),
-                  _buildRoleChip('vendor', 'Vendor Partner', Icons.store),
-                  _buildRoleChip('driver', 'Driver App', Icons.local_shipping),
-                  _buildRoleChip('super_admin', 'Super Admin', Icons.admin_panel_settings),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // 📱 Phone Number or Email Field
-              TextField(
-                controller: _emailController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: _selectedRole == 'driver' ? 'Registered Phone Number' : 'Email Address',
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: Icon(_selectedRole == 'driver' ? Icons.phone : Icons.email_outlined, color: Colors.grey),
-                  filled: true,
-                  fillColor: const Color(0xFF0F172A),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        child: SingleChildScrollView(
+          child: Container(
+            width: 440,
+            margin: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 40),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF0EA5E9).withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Logo & Header
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.hub_rounded, color: Color(0xFF0EA5E9), size: 40),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'REORDA',
+                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Smart B2B Supply Chain Portal',
+                        style: TextStyle(fontSize: 13, color: Colors.grey), // 👈 දෝෂය ඉවත් කරන ලදී
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 28),
+                const Divider(color: Color(0xFF334155), height: 1),
+                const SizedBox(height: 24),
 
-              // 🔐 Password Field (for Admin/Hotel/Vendor) OR 4-digit PIN Field (for Driver)
-              if (_selectedRole == 'driver') ...[
+                // Role Selector Tabs
+                const Text('Select Portal Access:', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 12),
+                Center(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _buildRoleChip('hotel', 'Hotel Store', Icons.hotel),
+                      _buildRoleChip('vendor', 'Vendor Partner', Icons.store),
+                      _buildRoleChip('driver', 'Driver App', Icons.local_shipping),
+                      _buildRoleChip('super_admin', 'Super Admin', Icons.admin_panel_settings),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // 📱 Phone Number or Email Field
                 TextField(
-                  controller: _pinController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                  obscureText: false,
-                  style: const TextStyle(color: Colors.orangeAccent, fontSize: 18, letterSpacing: 8),
+                  controller: _emailController,
+                  style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Enter 4-Digit Delivery PIN',
-                    hintText: '----',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    labelStyle: const TextStyle(color: Colors.orangeAccent),
-                    prefixIcon: const Icon(Icons.vpn_key, color: Colors.orangeAccent),
+                    labelText: _selectedRole == 'driver' ? 'Registered Phone Number' : 'Email Address',
+                    hintText: _selectedRole == 'driver' ? 'e.g. 0771234567' : 'e.g. user@reorda.net',
+                    hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    labelStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: Icon(_selectedRole == 'driver' ? Icons.phone_outlined : Icons.email_outlined, color: const Color(0xFF0EA5E9)),
                     filled: true,
                     fillColor: const Color(0xFF0F172A),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF0EA5E9), width: 1.5),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
-              ] else ...[
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
-                    filled: true,
-                    fillColor: const Color(0xFF0F172A),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _selectedRole == 'driver' ? Colors.orangeAccent : const Color(0xFF0EA5E9),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                // 🔐 Password Field OR 4-digit PIN Field
+                if (_selectedRole == 'driver') ...[
+                  TextField(
+                    controller: _pinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    obscureText: false,
+                    style: const TextStyle(color: Colors.orangeAccent, fontSize: 20, letterSpacing: 12, fontWeight: FontWeight.bold),
+                    decoration: InputDecoration(
+                      labelText: '4-Digit Delivery PIN',
+                      hintText: '----',
+                      counterText: '',
+                      hintStyle: TextStyle(color: Colors.grey.shade600),
+                      labelStyle: const TextStyle(color: Colors.orangeAccent),
+                      prefixIcon: const Icon(Icons.vpn_key_outlined, color: Colors.orangeAccent),
+                      filled: true,
+                      fillColor: const Color(0xFF0F172A),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.orangeAccent, width: 1.5),
+                      ),
+                    ),
                   ),
-                  onPressed: _isLoading ? null : _handleLogin,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          _selectedRole == 'driver' ? 'Login to Driver Portal with PIN' : 'Login to ${_selectedRole.toUpperCase()} Portal',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
+                ] else ...[
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Enter your secure password',
+                      hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      labelStyle: const TextStyle(color: Colors.grey),
+                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF0EA5E9)),
+                      filled: true,
+                      fillColor: const Color(0xFF0F172A),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF0EA5E9), width: 1.5),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 28),
+
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _selectedRole == 'driver' ? Colors.orangeAccent : const Color(0xFF0EA5E9),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(
+                            _selectedRole == 'driver' ? 'Verify PIN & Enter Driver Portal' : 'Login to ${_selectedRole.toUpperCase().replaceAll('_', ' ')} Portal',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          ),
+                  ),
                 ),
-              )
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -307,24 +372,26 @@ class _LoginScreenState extends State<LoginScreen> {
     final isSelected = _selectedRole == role;
     return ChoiceChip(
       avatar: Icon(icon, size: 16, color: isSelected ? Colors.white : Colors.grey),
-      label: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.grey, fontSize: 12)),
+      label: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
       selected: isSelected,
       selectedColor: const Color(0xFF0EA5E9),
       backgroundColor: const Color(0xFF0F172A),
+      elevation: isSelected ? 2 : 0,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: isSelected ? const Color(0xFF0EA5E9) : const Color(0xFF334155),
+          width: 1,
+        ),
+      ),
       onSelected: (selected) {
         if (selected) {
           setState(() {
             _selectedRole = role;
-            if (role == 'vendor') {
-              _emailController.text = 'vendor@lankaagro.com';
-            } else if (role == 'hotel') {
-              _emailController.text = 'hotel@reorda.net';
-            } else if (role == 'driver') {
-              _emailController.text = '0771234567'; // Driver phone default
-              _pinController.text = ''; // Reset pin box
-            } else {
-              _emailController.text = 'admin@reorda.net';
-            }
+            _emailController.clear();
+            _passwordController.clear();
+            _pinController.clear();
           });
         }
       },

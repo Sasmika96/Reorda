@@ -12,12 +12,20 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
 
+  // 1. --dart-define හරහා දීපු API Key එක ලබා ගැනීම
+  const String envApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+  // 2. Local development සඳහා .env ෆයිල් එක ලෝඩ් කිරීමට උත්සාහ කිරීම
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    debugPrint("Error loading .env file: $e");
+    debugPrint("Error loading .env file (Running on Web or file missing): $e");
+  }
+
+  // 3. --dart-define මඟින් ලබා දී ඇත්නම්, එය dotenv.env වෙත ඇතුළත් කිරීම
+  if (envApiKey.isNotEmpty) {
+    dotenv.env['GEMINI_API_KEY'] = envApiKey;
   }
 
   await Firebase.initializeApp(
@@ -78,7 +86,6 @@ class AuthWrapper extends StatelessWidget {
                 if (role == 'vendor') {
                   return VendorDashboardScreen(vendorId: user.uid);
                 } else if (role == 'driver') {
-                  // 👈 2. Driver Role එක සඳහා real DriverDashboardScreen එකක් return කිරීම
                   return DriverDashboardScreen(driverData: userData);
                 } else if (role == 'super_admin') {
                   return const SuperAdminDashboardScreen();

@@ -6,7 +6,9 @@ class GeminiService {
   Future<String> generateDemandForecast(InventoryItem item) async {
     try {
       // 1. .env API call
-      final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+      //final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+      const String _envApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+final apiKey = _envApiKey.isNotEmpty ? _envApiKey : (dotenv.env['GEMINI_API_KEY'] ?? '');
 
       if (apiKey.isEmpty || apiKey == "YOUR_GEMINI_API_KEY_HERE") {
         print("GeminiService Warning: GEMINI_API_KEY is missing in .env file.");

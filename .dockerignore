@@ -1,0 +1,6 @@
+.git
+.gitignore
+build/
+.dart_tool/
+.pub/
+.idea/

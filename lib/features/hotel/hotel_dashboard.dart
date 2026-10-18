@@ -110,7 +110,18 @@ Future<void> _fetchAiDistrictTrendOnce() async {
       '• Item: ${item.name} | Category: ${item.category}'
     ).join('\n');
 
+    //final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+   // 1. මුලින්ම --dart-define එකෙන් කී එක ගන්නවා
+    const String _envApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+    // 2. ඒක තියෙනවා නම් කෙලින්ම dotenv.env එකට සෙට් කරනවා
+    if (_envApiKey.isNotEmpty) {
+      dotenv.env['GEMINI_API_KEY'] = _envApiKey;
+    }
+
+    // 3. දැන් dotenv එකෙන් හරියටම කී එක ගන්නවා (local හෝ dart-define දෙකෙන්ම වැඩ කරයි)
     final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+    
     if (apiKey.isEmpty) {
       if (mounted) {
         setState(() {
@@ -183,11 +194,20 @@ Future<String> _getRealGeminiAiDemandForecast() async {
       '• Item: ${item.name} | Category: ${item.category}'
     ).join('\n');
 
-    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
-    
-    if (apiKey.isEmpty) {
-      return 'AI Forecast: GEMINI_API_KEY is missing. Using offline mode.';
-    }
+    //final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+ const String _envApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+// 2. ඒක තියෙනවා නම් කෙලින්ම dotenv.env එකට දාලා ෂුවර් කරගන්නවා
+if (_envApiKey.isNotEmpty) {
+  dotenv.env['GEMINI_API_KEY'] = _envApiKey;
+}
+
+// 3. ඊට පස්සේ සාමාන්‍ය විදිහට dotenv එකෙන් කී එක ගන්නවා
+final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+
+if (apiKey.isEmpty) {
+  return 'AI Forecast: GEMINI_API_KEY is missing. Using offline mode.';
+}
 
     final model = GenerativeModel(
       model: 'gemini-3.8-flash',
@@ -213,10 +233,9 @@ Future<String> _getRealGeminiAiDemandForecast() async {
     return 'AI Forecast: High weekend spike predicted. Reorder stock threshold recommended at +15% for critical items.';
 
   } catch (e) {
-    print('Gemini API Error: $e');
-    
-    return 'AI Forecast: High weekend spike predicted. Reorder stock threshold recommended at +15% for critical items.';
-  }
+  print('🚨 REAL GEMINI API ERROR: $e'); // 👈 මේකෙන් Console එකේ ඇත්තම රික්වෙස්ට් එරර් එක පේනවා
+  return 'AI Forecast: Error connecting to Vertex AI. ($e)';
+}
 }
 
 
